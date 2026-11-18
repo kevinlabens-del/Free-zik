@@ -21,8 +21,8 @@ jobs:
           node-version: '22'
       - name: Installer Playwright
         run: npm install --no-save playwright@1.56.1
-      - name: Installer Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Vérifier Chrome préinstallé
+        run: google-chrome --version
       - name: Tester les vraies pages HTTPS
         run: node tests/smoke.cjs
       - name: Conserver les captures de diagnostic
