@@ -34,8 +34,11 @@ function beginSearch(q){
   if(seq!==state.seq)return;setResults(d.items||[], 'Résultats pour « '+q+' »');
  }).catch(function(){
   if(seq!==state.seq)return;
-  $('#list-title').textContent='Recherche indisponible';
-  $('#cards').innerHTML='<div class="empty">La recherche publique de vidéos est momentanément indisponible. Tu peux toujours coller un lien YouTube direct.</div>';
+  $('#list-title').textContent='Recherche momentanément indisponible';
+  var box=$('#cards');box.innerHTML='';
+  var notice=document.createElement('div');notice.className='empty';notice.textContent='La recherche YouTube n’a pas répondu. Essaie un lien vidéo direct ou consulte les résultats dans YouTube.';
+  var btn=document.createElement('button');btn.type='button';btn.className='primary';btn.textContent='↗ Chercher « '+q+' » sur YouTube';btn.addEventListener('click',function(){openTarget('https://www.youtube.com/results?search_query='+encodeURIComponent(q));});
+  box.appendChild(notice);box.appendChild(btn);
  });
  $('#results-section').scrollIntoView({behavior:'smooth',block:'start'});
 }

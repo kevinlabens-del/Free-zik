@@ -47,6 +47,7 @@ async function navigate(page,target){
     await page.locator('#search-input').fill('https://www.youtube.com/watch?v=M7lc1UVf-VE');
     await page.locator('#search-form button[type=submit]').click();
     await page.locator('#lecteur').waitFor({state:'visible',timeout:12000});
+    await page.waitForFunction(() => (document.querySelector('#video-frame')?.getAttribute('src')||'').includes('yout-ube.com/watch?v=M7lc1UVf-VE'),null,{timeout:12000});
     const src=await page.locator('#video-frame').getAttribute('src');
     assert.ok(src&&src.includes('yout-ube.com/watch?v=M7lc1UVf-VE'),'Unexpected primary iframe: '+src);
     await page.screenshot({path:path.join(out,'mobile-player.png'),fullPage:true});
