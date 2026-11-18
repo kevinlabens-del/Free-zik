@@ -1,20 +1,26 @@
-# free-zik
+# free-zik 📺
 
-Application PWA de recherche de vidéos et playlists YouTube, conversion vers `yout-ube.com`, favoris, historique et options Cast.
+PWA indépendante, avec recherche de vidéos et playlists YouTube, conversion vers `yout-ube.com`, historique, favoris et options de diffusion TV.
 
-## Adresse publique
+## Ouvrir l'application
 
-Quand GitHub Pages est activé avec **Build and deployment → Source → GitHub Actions** :
+**[free-zik en ligne](https://free-zik-creatix5.vercel.app/)**
 
-https://kevinlabens-del.github.io/Free-zik/
+L'application est hébergée en HTTPS sur le projet Vercel indépendant `free-zik`. Elle est également conservée dans ce dépôt GitHub.
 
 ## Installation Android
 
-Ouvrir le site dans Chrome via HTTPS, puis menu ⋮ → **Installer l’application**.
+Ouvrir le lien HTTPS dans Chrome sur Android puis sélectionner **⋮ → Installer l'application** (ou **Ajouter à l'écran d'accueil**, selon le navigateur).
 
-## Fonctionnement et limites
+## Publication GitHub Pages (optionnelle)
 
-- Les recherches automatiques via Invidious dépendent d'instances tierces et peuvent échouer (CORS, disponibilité). Une clé personnelle YouTube Data API est possible dans les réglages.
-- L’intégration `yout-ube.com` dans un iframe peut être bloquée par le site tiers. Le lecteur YouTube officiel et l’ouverture externe sont proposés comme solutions de secours.
-- Le Cast d'une vidéo YouTube passe par l’application YouTube ; la sélection d’un appareil Google Cast seule ne diffuse pas un lien de page YouTube.
-- Aucune affiliation avec Google ou YouTube.
+Le workflow `.github/workflows/deploy.yml` est prêt, mais GitHub Pages doit être activé une première fois par le propriétaire du dépôt dans **Settings → Pages → Build and deployment → Source → GitHub Actions**. Après activation, relancer le workflow pour publier également sur `https://kevinlabens-del.github.io/Free-zik/`.
+
+## Limites de fonctionnement
+
+- La recherche sans clé API dépend de serveurs Invidious publics qui peuvent être indisponibles ou bloquer les requêtes depuis le navigateur.
+- `yout-ube.com` peut refuser l'intégration dans un lecteur. Un lecteur YouTube officiel et l'ouverture du lien sont disponibles en secours.
+- Pour caster du contenu YouTube, ouvrir YouTube et utiliser son bouton Cast. Sélectionner un écran via la PWA ne lance pas automatiquement le flux vidéo.
+- free-zik n'est pas affilié à YouTube ou Google.
+
+**État** : fichiers GitHub publiés ; déploiement Vercel prêt. Le déploiement GitHub Pages attend l'activation de Pages par le propriétaire.
