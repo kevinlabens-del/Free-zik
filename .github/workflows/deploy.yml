@@ -1,7 +1,7 @@
 name: Publier free-zik sur GitHub Pages
+# GitHub Pages requires enabling Pages once in repository settings.
+# Vercel is the production host; avoid failed deploys on every push.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
