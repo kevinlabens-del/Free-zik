@@ -111,7 +111,8 @@ function inspectTV(){
   ['Navigateur',ua.slice(0,280)],
   ['Vidéo MP4 / H.264 + AAC',h264||'Support non annoncé'],
   ['Lecture YouTube intégrée','À tester : dépend de la TV, de la vidéo et des règles YouTube'],
-  ['Connexion',navigator.onLine?'Navigateur en ligne':'Hors ligne / connexion à vérifier']
+  ['Connexion',navigator.onLine?'Navigateur en ligne':'Hors ligne / connexion à vérifier'],
+  ['Moteur Web Samsung 2026','Chromium 130 attendu sur les modèles Tizen 10.0 (à confirmer avec le navigateur de la TV)']
  ].forEach(function(pair){var el=document.createElement('div');el.className='compat-line';var k=document.createElement('strong');k.textContent=pair[0];var v=document.createElement('span');v.textContent=pair[1];el.appendChild(k);el.appendChild(v);box.appendChild(el);});
  $('#compat-panel').hidden=false;
  $('#compat-panel').scrollIntoView({behavior:'smooth',block:'start'});
@@ -158,7 +159,10 @@ $('#query').addEventListener('input',function(){
 });
 document.addEventListener('keydown',function(e){
  var key=e.key||'',code=e.keyCode||0;
- if(key==='Escape'||key==='Backspace'&&document.activeElement!==$('#query')||code===10009){
+ var keyMap={Left:'ArrowLeft',Right:'ArrowRight',Up:'ArrowUp',Down:'ArrowDown'};
+ if(keyMap[key])key=keyMap[key];
+ if(!key||key==='Unidentified')key=({37:'ArrowLeft',38:'ArrowUp',39:'ArrowRight',40:'ArrowDown',10009:'Back'})[code]||key;
+ if(key==='Escape'||key==='Back'||key==='BrowserBack'||(key==='Backspace'&&document.activeElement!==$('#query'))||code===10009){
   if(!$('#player-panel').hidden){e.preventDefault();closePlayer();return;}
   if(!$('#compat-panel').hidden){e.preventDefault();$('#compat-panel').hidden=true;$('#compat-btn').focus();return;}
   if(!$('#suggestions').hidden){$('#suggestions').hidden=true;e.preventDefault();return;}
