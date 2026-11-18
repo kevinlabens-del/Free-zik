@@ -112,11 +112,12 @@
         </div>
         <div class="player-frame-wrap"><iframe id="video-frame" title="Lecteur vidéo ou playlist" src="about:blank" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
         <div class="player-inline-controls" aria-label="Commandes du lecteur">
+          <button type="button" id="player-play" class="primary-btn">▶ Lire maintenant</button>
           <button type="button" id="player-restart" class="outline-btn small">↻ Relancer dans free-zik</button>
           <label class="player-loop-label"><input type="checkbox" id="player-loop" checked /> 🔁 Lecture en boucle</label>
           <button type="button" id="player-fullscreen" class="outline-btn small">⛶ Plein écran</button>
         </div>
-        <p id="player-note" class="player-note">Vidéo directement dans free-zik, avec le lecteur en mode de confidentialité renforcée. Si la lecture automatique ne démarre pas, touche ▶.</p>
+        <p id="player-note" class="player-note">Si le cadre reste vide, touche « ▶ Lire maintenant ». Si la vidéo refuse l'intégration, utilise « Lecteur alternatif » ou « Ouvrir YouTube ».</p>
         <div class="player-actions">
           <button id="open-converted" type="button" class="outline-btn">Ouvrir le lien yout-ube ↗</button>
           <button id="copy-converted" type="button" class="outline-btn">Copier le lien</button>
@@ -419,10 +420,10 @@ function renderFavoriteButton() {putText($('#favorite-btn'),STORE.current && isF
 function setPlayerMode(mode) {
   if(!STORE.current)return;
   STORE.mode=mode==='official'?'official':'converted';
-  $('.player-tab').forEach(el=>{const chosen=el.dataset.mode===STORE.mode;el.classList.toggle('active',chosen);el.setAttribute('aria-selected',String(chosen));});
+  $$('.player-tab').forEach(el=>{const chosen=el.dataset.mode===STORE.mode;el.classList.toggle('active',chosen);el.setAttribute('aria-selected',String(chosen));});
   $('#video-frame').src=embedUrl(STORE.current,STORE.mode,STORE.loop) || 'about:blank';
   putText($('#player-note'),STORE.mode==='converted'
-    ?'Lecture intégrée dans free-zik : lecteur YouTube en mode confidentialité renforcée, comme yout-ube.com. Si la lecture automatique est bloquée, touche ▶ dans le lecteur.'
+    ?'Lecteur vidéo dans free-zik. Si tu ne vois pas les commandes, touche « ▶ Lire maintenant ». Certaines vidéos interdisent l’intégration, même dans le lecteur YouTube officiel.'
     :'Lecteur YouTube standard, toujours dans free-zik. Certaines vidéos peuvent refuser l’intégration.');
 }
 function play(item) {
@@ -634,6 +635,10 @@ $('#more-btn').addEventListener('click',()=>{
   search(STORE.lastQuery,true);
 });
 $('#player-loop').checked=STORE.loop;
+$('#player-play').addEventListener('click',()=>{
+  if(!STORE.current){toast('Choisis une vidéo ou une playlist d’abord.');return;}
+  setPlayerMode(STORE.mode);
+});
 $('#player-loop').addEventListener('change',event=>{
   STORE.loop=event.target.checked;
   save('free-zik.player-loop.v1',STORE.loop);
@@ -651,7 +656,7 @@ $('#player-fullscreen').addEventListener('click',async()=>{
     else toast('Utilise le bouton plein écran du lecteur YouTube.');
   } catch {toast('Utilise le bouton plein écran du lecteur YouTube.');}
 });
-$('.player-tab').forEach(el=>el.addEventListener('click',()=>setPlayerMode(el.dataset.mode)));
+$$('.player-tab').forEach(el=>el.addEventListener('click',()=>setPlayerMode(el.dataset.mode)));
 $('#open-converted').addEventListener('click',()=>external(convertedUrl(STORE.current)));
 $('#open-original').addEventListener('click',()=>external(originalUrl(STORE.current)));
 $('#copy-converted').addEventListener('click',copyCurrent);
