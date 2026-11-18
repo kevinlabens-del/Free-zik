@@ -48,8 +48,13 @@
 .suggest-source{font-size:10px;color:#aaa7bc}
 .suggest-go{flex-shrink:0;font-size:16px;color:#a9a3bc}
 @media(max-width:570px){.suggestions-popover{border-radius:12px}.suggest-option{font-size:12px;min-height:45px}.suggest-caption{font-size:9px}}
+.player-inline-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 8px}
+.player-inline-controls button{min-height:36px}
+.player-loop-label{display:inline-flex;gap:7px;align-items:center;border:1px solid #50465f;background:#24212e;color:#f0eaff;padding:9px 12px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
+.player-loop-label input{accent-color:#b394ff;width:17px;height:17px}
+@media(max-width:570px){.player-inline-controls{gap:7px}.player-inline-controls button,.player-loop-label{font-size:11px;padding:9px}.player-inline-controls button:first-child{flex:1}}
 </style>
-  <title>free-zik — Recherche, vidéos & Cast</title>
+  <title>free-zik — Lecture intégrée, musique & Cast</title>
 </head>
 <body>
   <div class="app-shell">
@@ -71,7 +76,7 @@
         <div class="hero-copy">
           <div class="eyebrow"><span class="spark"></span> TON YOUTUBE, À TA FAÇON</div>
           <h1>Une recherche.<br><span>Ton lecteur.</span></h1>
-          <p>Recherche une vidéo ou une playlist, puis passe automatiquement de <strong>youtube.com</strong> à <strong>yout-ube.com</strong>.</p>
+          <p>Trouve ta musique et regarde les vidéos <strong>directement dans free-zik</strong>, avec le mode de lecture de yout-ube et un lien partageable.</p>
           <form id="search-form" class="search-panel">
             <label class="sr-only" for="search-input">Rechercher une vidéo, une playlist ou coller un lien</label>
             <span class="search-icon" aria-hidden="true">⌕</span>
@@ -102,13 +107,18 @@
       <section class="player-section" id="lecteur" hidden>
         <div class="section-head"><div><span class="section-kicker">LECTEUR</span><h2 id="now-title">Ta vidéo</h2></div><button id="favorite-btn" class="outline-btn small" type="button">☆ Favori</button></div>
         <div class="player-tabs" role="tablist" aria-label="Mode du lecteur">
-          <button class="player-tab active" type="button" data-mode="converted" aria-selected="true">yout-ube.com</button>
-          <button class="player-tab" type="button" data-mode="official" aria-selected="false">Lecteur officiel</button>
+          <button class="player-tab active" type="button" data-mode="converted" aria-selected="true">▶ Lecture intégrée</button>
+          <button class="player-tab" type="button" data-mode="official" aria-selected="false">Lecteur alternatif</button>
         </div>
         <div class="player-frame-wrap"><iframe id="video-frame" title="Lecteur vidéo ou playlist" src="about:blank" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
-        <p id="player-note" class="player-note">Le site tiers peut refuser l'affichage dans une PWA. Tu peux alors utiliser « Lecteur officiel » ou ouvrir le lien dans ton navigateur.</p>
+        <div class="player-inline-controls" aria-label="Commandes du lecteur">
+          <button type="button" id="player-restart" class="outline-btn small">↻ Relancer dans free-zik</button>
+          <label class="player-loop-label"><input type="checkbox" id="player-loop" checked /> 🔁 Lecture en boucle</label>
+          <button type="button" id="player-fullscreen" class="outline-btn small">⛶ Plein écran</button>
+        </div>
+        <p id="player-note" class="player-note">Vidéo directement dans free-zik, avec le lecteur en mode de confidentialité renforcée. Si la lecture automatique ne démarre pas, touche ▶.</p>
         <div class="player-actions">
-          <button id="open-converted" type="button" class="primary-btn">Ouvrir yout-ube <span>↗</span></button>
+          <button id="open-converted" type="button" class="outline-btn">Ouvrir le lien yout-ube ↗</button>
           <button id="copy-converted" type="button" class="outline-btn">Copier le lien</button>
           <button id="open-original" type="button" class="outline-btn">Ouvrir YouTube ↗</button>
           <button id="cast-player-btn" type="button" class="cast-main">📺 Caster sur ma TV</button>
@@ -212,13 +222,22 @@ function convertedUrl(item) {
   return url.toString();
 }
 
-function embedUrl(item) {
+// yout-ube.com redirects to YouTube's privacy-enhanced player; embed that player directly.
+function embedUrl(item,mode='converted',loop=true) {
   if (!item?.id && !item?.list) return null;
-  const base = item.id ? `https://www.youtube-nocookie.com/embed/${item.id}` : 'https://www.youtube-nocookie.com/embed/videoseries';
-  const url = new URL(base);
-  if (item.list) url.searchParams.set('list', item.list);
-  if (item.start && item.id) url.searchParams.set('start', String(item.start));
-  url.searchParams.set('rel', '0');
+  const host=mode==='converted'?'www.youtube-nocookie.com':'www.youtube.com';
+  const base=item.id?`https://${host}/embed/${item.id}`:`https://${host}/embed/videoseries`;
+  const url=new URL(base);
+  if(item.list)url.searchParams.set('list',item.list);
+  if(item.start&&item.id)url.searchParams.set('start',String(item.start));
+  url.searchParams.set('playsinline','1');
+  url.searchParams.set('controls','1');
+  url.searchParams.set('rel','0');
+  url.searchParams.set('autoplay','1');
+  if(loop){
+    url.searchParams.set('loop','1');
+    if(item.id&&!item.list)url.searchParams.set('playlist',item.id);
+  }
   return url.toString();
 }
 
@@ -256,6 +275,7 @@ const STORE = {
   nextPageToken: '',
   lastQuery: '',
   mode: 'converted',
+  loop: load('free-zik.player-loop.v1',true),
   isLoading: false
 };
 let toastTimeout;
@@ -398,13 +418,12 @@ function isFavorite(item){return STORE.favorites.some(x=>itemKey(x)===itemKey(it
 function renderFavoriteButton() {putText($('#favorite-btn'),STORE.current && isFavorite(STORE.current)?'★ Retirer des favoris':'☆ Favori');}
 function setPlayerMode(mode) {
   if(!STORE.current)return;
-  STORE.mode=mode;
-  $$('.player-tab').forEach(el=>{const chosen=el.dataset.mode===mode;el.classList.toggle('active',chosen);el.setAttribute('aria-selected',String(chosen));});
-  const url=mode==='converted'?convertedUrl(STORE.current):embedUrl(STORE.current);
-  $('#video-frame').src='about:blank';
-  // For third-party sites, iframe embedding can be blocked by CSP/X-Frame-Options.
-  $('#video-frame').src=url || 'about:blank';
-  putText($('#player-note'),mode==='converted'?'Si yout-ube.com refuse le lecteur intégré, utilise « Lecteur officiel » ou « Ouvrir yout-ube ». La conversion du lien reste disponible.':'Mode de secours officiel YouTube. Certaines vidéos bloquent l’intégration ou imposent des restrictions.');
+  STORE.mode=mode==='official'?'official':'converted';
+  $('.player-tab').forEach(el=>{const chosen=el.dataset.mode===STORE.mode;el.classList.toggle('active',chosen);el.setAttribute('aria-selected',String(chosen));});
+  $('#video-frame').src=embedUrl(STORE.current,STORE.mode,STORE.loop) || 'about:blank';
+  putText($('#player-note'),STORE.mode==='converted'
+    ?'Lecture intégrée dans free-zik : lecteur YouTube en mode confidentialité renforcée, comme yout-ube.com. Si la lecture automatique est bloquée, touche ▶ dans le lecteur.'
+    :'Lecteur YouTube standard, toujours dans free-zik. Certaines vidéos peuvent refuser l’intégration.');
 }
 function play(item) {
   if(!item?.id && !item?.list) return;
@@ -614,7 +633,25 @@ $('#more-btn').addEventListener('click',()=>{
   if(STORE.settings.provider==='public')STORE.page+=1;
   search(STORE.lastQuery,true);
 });
-$$('.player-tab').forEach(el=>el.addEventListener('click',()=>setPlayerMode(el.dataset.mode)));
+$('#player-loop').checked=STORE.loop;
+$('#player-loop').addEventListener('change',event=>{
+  STORE.loop=event.target.checked;
+  save('free-zik.player-loop.v1',STORE.loop);
+  if(STORE.current)setPlayerMode(STORE.mode);
+});
+$('#player-restart').addEventListener('click',()=>{
+  if(!STORE.current){toast('Choisis une vidéo d’abord.');return;}
+  setPlayerMode(STORE.mode);
+});
+$('#player-fullscreen').addEventListener('click',async()=>{
+  if(!STORE.current){toast('Choisis une vidéo d’abord.');return;}
+  const frame=$('#video-frame');
+  try {
+    if(frame.requestFullscreen)await frame.requestFullscreen();
+    else toast('Utilise le bouton plein écran du lecteur YouTube.');
+  } catch {toast('Utilise le bouton plein écran du lecteur YouTube.');}
+});
+$('.player-tab').forEach(el=>el.addEventListener('click',()=>setPlayerMode(el.dataset.mode)));
 $('#open-converted').addEventListener('click',()=>external(convertedUrl(STORE.current)));
 $('#open-original').addEventListener('click',()=>external(originalUrl(STORE.current)));
 $('#copy-converted').addEventListener('click',copyCurrent);
