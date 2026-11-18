@@ -27,3 +27,14 @@ const results=await Promise.all(providers.map(async([name,url])=>{
 }));
 for(const r of results)console.log("PROVIDER "+JSON.stringify(r));
 console.log("HEALTHY "+JSON.stringify(results.filter(x=>x.status===200&&x.hasVideoID).map(x=>x.name)));
+
+import { createRequire } from 'node:module';
+const require=createRequire(import.meta.url);
+const search=require('../api/search.js');
+try{
+ const response=await fetch('https://www.youtube.com/results?search_query=stromae&hl=fr&gl=FR',{signal:AbortSignal.timeout(12000),headers:{'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36',Accept:'text/html'}});
+ const html=await response.text();
+ const results=search.parseYoutubeResults(html);
+ console.log('YOUTUBE PARSER '+JSON.stringify({status:response.status,htmlBytes:html.length,count:results.length,first:results.slice(0,3)}));
+ if(!results.length)process.exitCode=1;
+}catch(e){console.error('YOUTUBE PARSER FAILED '+String(e));process.exitCode=1;}
