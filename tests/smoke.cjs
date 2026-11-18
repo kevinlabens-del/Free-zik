@@ -39,6 +39,18 @@ async function navigate(page,target){
     if(errors.length)throw Error('Page errors '+errors.join('; '));
    }finally{await ctx.close();}
   });
+  await run('Recherche Android affiche des miniatures',async()=>{
+   const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+   const page=await ctx.newPage();
+   try{
+    await navigate(page,'/');
+    await page.locator('#search-input').fill('stromae');
+    await page.locator('#search-form button[type=submit]').click();
+    try{await page.locator('.result-card').first().waitFor({state:'visible',timeout:25000});}
+    finally{await page.screenshot({path:path.join(out,'mobile-search.png'),fullPage:true});}
+    assert.ok(await page.locator('.result-card').count()>0,'No mobile music cards');
+   }finally{await ctx.close();}
+  });
   await run('Version mobile lit URL individuelle dans le lecteur',async()=>{
    const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
    const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
