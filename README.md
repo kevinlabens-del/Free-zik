@@ -24,3 +24,8 @@ Le workflow `.github/workflows/deploy.yml` est prêt, mais GitHub Pages doit êt
 - free-zik n'est pas affilié à YouTube ou Google.
 
 **État** : fichiers GitHub publiés ; déploiement Vercel prêt. Le déploiement GitHub Pages attend l'activation de Pages par le propriétaire.
+
+
+## Suggestions musicales (v2)
+
+Dès la première lettre, un menu affiche des idées musicales et les recherches précédentes. Des suggestions récentes YouTube et des titres musicaux iTunes enrichissent ensuite la liste via le service /api/suggest sur Vercel. Navigation tactile ou au clavier. Si le service distant est indisponible, les propositions locales restent disponibles.

@@ -34,6 +34,20 @@
 .cast-help{margin-top:16px;padding:13px;background:#20202b;border-radius:12px;font-size:12px;color:#d5d2e2;line-height:1.6}.cast-help summary{cursor:pointer;font-weight:750}.cast-help ol{margin:10px 0 0;padding-left:18px}.cast-help li{margin:6px 0}.cast-state{font-size:12px!important;margin:12px 0 0;color:#b5e9d9!important}
 .cast-footnote{font-size:11px!important;color:#a5a3b4!important;margin-top:15px!important}
 @media(max-width:570px){.cast-top{font-size:18px;width:39px;height:38px;padding:5px}.cast-top .cast-text{display:none}.cast-inside{padding:18px}.cast-heading h2{font-size:21px}}
+
+/* Suggestions musicales : portail fixe hors de la section hero (overflow:hidden). */
+.suggestions-popover[hidden]{display:none!important}
+.suggestions-popover{position:fixed;z-index:250;overflow-x:hidden;overflow-y:auto;background:#1d1a29;border:1px solid #73628f;border-radius:14px;padding:7px;box-shadow:0 20px 55px #05030fe0,0 0 0 1px #9c87d31c;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#7866a2 #1d1a29}
+.suggest-caption{font-size:10px;color:#a8a2be;font-weight:780;text-transform:uppercase;letter-spacing:1.3px;padding:9px 12px 8px}
+.suggest-option{display:flex;align-items:center;gap:12px;width:100%;min-height:47px;background:transparent;border:0;border-radius:9px;color:#f4f2fb;padding:7px 11px;text-align:left;font-size:13px;cursor:pointer}
+.suggest-option:hover,.suggest-option.is-active{background:#38304d;color:white}
+.suggest-option:focus-visible{outline:2px solid #9ed8d1;outline-offset:-2px}
+.suggest-icon{width:30px;height:30px;display:grid;place-items:center;flex-shrink:0;background:#302b42;color:#bcaaff;border-radius:9px;font-size:16px}
+.suggest-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.suggest-label{font-weight:690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suggest-source{font-size:10px;color:#aaa7bc}
+.suggest-go{flex-shrink:0;font-size:16px;color:#a9a3bc}
+@media(max-width:570px){.suggestions-popover{border-radius:12px}.suggest-option{font-size:12px;min-height:45px}.suggest-caption{font-size:9px}}
 </style>
   <title>free-zik — Recherche, vidéos & Cast</title>
 </head>
@@ -61,7 +75,7 @@
           <form id="search-form" class="search-panel">
             <label class="sr-only" for="search-input">Rechercher une vidéo, une playlist ou coller un lien</label>
             <span class="search-icon" aria-hidden="true">⌕</span>
-            <input id="search-input" type="search" placeholder="Titre, artiste, playlist ou lien YouTube…" autocomplete="off" enterkeyhint="search" required />
+            <input id="search-input" type="search" placeholder="Artiste, musique, playlist ou lien YouTube…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="search-suggestions" required />
             <button type="submit" class="search-button">Rechercher <span aria-hidden="true">↗</span></button>
           </form>
           <div class="editor-actions">
@@ -148,6 +162,7 @@
 
   <nav class="mobile-nav" aria-label="Navigation"><a href="#accueil"><span>⌕</span>Chercher</a><a href="#lecteur" id="nav-player"><span>▶</span>Lecteur</a><a href="#bibliotheque"><span>☆</span>Bibliothèque</a></nav>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div id="search-suggestions" class="suggestions-popover" role="listbox" aria-label="Suggestions de musique" hidden></div>
   <script>
 const VIDEO_ID = /^[a-zA-Z0-9_-]{11}$/;
 const PLAYLIST_ID = /^[a-zA-Z0-9_-]{8,160}$/;
@@ -436,8 +451,159 @@ function applyShareTarget(){
   if (params.has('url')||params.has('text')||params.has('title')) history.replaceState(null,'',location.pathname+location.hash);
 }
 
+
+/* Autocomplétion dès la première lettre, avec clavier + écran tactile.
+   Les idées locales sont immédiates et les suggestions externes arrivent ensuite. */
+const suggestInput=$('#search-input');
+const suggestPopup=$('#search-suggestions');
+const suggestForm=$('#search-form');
+const MUSIC_IDEAS=['Aya Nakamura','Angèle','Adele','Ariana Grande','Amel Bent','Alonzo','Bad Bunny','Billie Eilish','Black M','Booba','Bruno Mars','Calvin Harris','Coldplay','Damso','David Guetta','Dadju','Daft Punk','Dua Lipa','Eminem','Gims','Grand Corps Malade','Hamza','Indila','Jul','Jungeli','Keblack','Kendji Girac','Lady Gaga','Lomepal','Louane','Lartiste','MHD','Maître Gims','Ninho','Niska','Orelsan','PNL','Queen','Rihanna','Rim’K','SCH','Soprano','Stromae','SDM','Tayc','Tiakola','The Weeknd','Travis Scott','Vianney','Zaho de Sagazan','Zola','Musique française','Musique afro','Musique rap','Musique électro','Musique pop','Hits français','Hits du moment','Playlist musique'];
+let suggestChoices=[];
+let suggestActive=-1;
+let suggestCounter=0;
+let suggestTimer=0;
+let suggestController=null;
+const suggestCache=new Map();
+function normaliseSuggest(str){return String(str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('fr').trim();}
+function quickSuggestions(term){
+  const q=normaliseSuggest(term);
+  if(!q)return [];
+  const historyTitles=(Array.isArray(STORE.history)?STORE.history:[]).map(v=>v?.title).filter(v=>typeof v==='string'&&v.length<130);
+  const source=[...historyTitles,...MUSIC_IDEAS];
+  const found=source.filter(v=>normaliseSuggest(v).startsWith(q)).slice(0,7).map(label=>({label,source:'Idée musicale'}));
+  if(found.length<4&&!parseYouTube(term)){
+    for(const suffix of ['musique','chanson','clip officiel','playlist']){
+      if(found.length>=6)break;
+      found.push({label:term.trim()+' '+suffix,source:'Recherche suggérée'});
+    }
+  }
+  return found;
+}
+function placeSuggestions(){
+  if(suggestPopup.hidden)return;
+  const rect=suggestForm.getBoundingClientRect();
+  const view=window.visualViewport;
+  const leftBound=view?.offsetLeft||0;
+  const topBound=view?.offsetTop||0;
+  const viewWidth=view?.width||innerWidth;
+  const viewHeight=view?.height||innerHeight;
+  const width=Math.min(rect.width,viewWidth-22);
+  const left=Math.max(leftBound+11,Math.min(rect.left,leftBound+viewWidth-width-11));
+  const roomBelow=topBound+viewHeight-rect.bottom-12;
+  const roomAbove=rect.top-topBound-12;
+  const above=roomBelow<150&&roomAbove>roomBelow;
+  const height=Math.max(90,Math.min(340,above?roomAbove:roomBelow));
+  suggestPopup.style.width=Math.round(width)+'px';
+  suggestPopup.style.left=Math.round(left)+'px';
+  suggestPopup.style.maxHeight=Math.round(height)+'px';
+  suggestPopup.style.top=Math.round(above?Math.max(topBound+8,rect.top-height-6):rect.bottom+6)+'px';
+}
+function hideSuggestions(){
+  suggestPopup.hidden=true;
+  suggestPopup.replaceChildren();
+  suggestInput.setAttribute('aria-expanded','false');
+  suggestInput.removeAttribute('aria-activedescendant');
+  suggestChoices=[];suggestActive=-1;
+}
+function showSuggestions(items,term){
+  if(document.activeElement!==suggestInput||!term||parseYouTube(term)){hideSuggestions();return;}
+  const seen=new Set();
+  suggestChoices=items.filter(x=>{
+    const value=typeof x==='string'?x:x?.label;
+    if(typeof value!=='string'||!value.trim()||value.length>160)return false;
+    const key=normaliseSuggest(value);
+    if(seen.has(key))return false;
+    seen.add(key);return true;
+  }).slice(0,9).map(x=>typeof x==='string'?{label:x,source:'Suggestion YouTube'}:x);
+  if(!suggestChoices.length){hideSuggestions();return;}
+  suggestPopup.replaceChildren();
+  const caption=document.createElement('div');caption.className='suggest-caption';caption.textContent='🎵 Suggestions de musique';suggestPopup.append(caption);
+  suggestChoices.forEach((s,i)=>{
+    const option=document.createElement('button');
+    option.type='button';option.className='suggest-option';option.id='suggest-option-'+i;
+    option.setAttribute('role','option');option.setAttribute('aria-selected','false');
+    const icon=document.createElement('span');icon.className='suggest-icon';icon.setAttribute('aria-hidden','true');icon.textContent=s.source==='Titre musical'?'♫':'⌕';
+    const main=document.createElement('span');main.className='suggest-main';
+    const label=document.createElement('span');label.className='suggest-label';label.textContent=s.label;
+    const hint=document.createElement('span');hint.className='suggest-source';hint.textContent=s.source||'Suggestion musicale';
+    const arrow=document.createElement('span');arrow.className='suggest-go';arrow.setAttribute('aria-hidden','true');arrow.textContent='↗';
+    main.append(label,hint);option.append(icon,main,arrow);
+    option.addEventListener('pointerdown',e=>e.preventDefault());
+    option.addEventListener('click',()=>chooseSuggestion(i));
+    suggestPopup.append(option);
+  });
+  suggestActive=-1;
+  suggestPopup.hidden=false;
+  suggestInput.setAttribute('aria-expanded','true');
+  placeSuggestions();
+}
+function markSuggestion(index){
+  suggestActive=(index+suggestChoices.length)%suggestChoices.length;
+  suggestPopup.querySelectorAll('.suggest-option').forEach((el,i)=>{
+    el.classList.toggle('is-active',i===suggestActive);
+    el.setAttribute('aria-selected',String(i===suggestActive));
+    if(i===suggestActive)el.scrollIntoView({block:'nearest'});
+  });
+  suggestInput.setAttribute('aria-activedescendant','suggest-option-'+suggestActive);
+}
+function chooseSuggestion(index){
+  const choice=suggestChoices[index];if(!choice)return;
+  const value=choice.label;
+  suggestInput.value=value;cancelSuggestionRequest();hideSuggestions();
+  search(value);
+  suggestInput.blur();
+}
+function cancelSuggestionRequest(){
+  suggestCounter++;
+  clearTimeout(suggestTimer);
+  if(suggestController){suggestController.abort();suggestController=null;}
+}
+async function remoteSuggestions(q,requestNum){
+  const origin=(location.hostname==='free-zik-creatix5.vercel.app'||location.hostname.endsWith('.vercel.app'))?location.origin:'https://free-zik-creatix5.vercel.app';
+  const ctrl=new AbortController();suggestController=ctrl;
+  const timer=setTimeout(()=>ctrl.abort(),4500);
+  try{
+    const response=await fetch(origin+'/api/suggest?q='+encodeURIComponent(q),{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+    if(!response.ok)throw Error('suggest');
+    const body=await response.json();
+    if(!Array.isArray(body.items))throw Error('format');
+    const remote=body.items.filter(x=>x&&typeof x.label==='string').slice(0,9);
+    suggestCache.set(normaliseSuggest(q),remote);
+    if(suggestCache.size>45)suggestCache.delete(suggestCache.keys().next().value);
+    if(requestNum===suggestCounter&&suggestInput.value.trim()===q&&document.activeElement===suggestInput){
+      showSuggestions([...remote,...quickSuggestions(q)].slice(0,12),q);
+    }
+  }catch{/* Afficher les suggestions locales si le service distant ne répond pas. */}
+  finally{clearTimeout(timer);if(suggestController===ctrl)suggestController=null;}
+}
+suggestInput.addEventListener('input',()=>{
+  cancelSuggestionRequest();const q=suggestInput.value.trim();
+  if(!q||parseYouTube(q)){hideSuggestions();return;}
+  const cached=suggestCache.get(normaliseSuggest(q))||[];
+  showSuggestions([...cached,...quickSuggestions(q)],q);
+  const number=suggestCounter;
+  if(!cached.length)suggestTimer=setTimeout(()=>remoteSuggestions(q,number),170);
+});
+suggestInput.addEventListener('focus',()=>{
+  const q=suggestInput.value.trim();if(q&&!parseYouTube(q)){
+    showSuggestions([...(suggestCache.get(normaliseSuggest(q))||[]),...quickSuggestions(q)],q);
+  }
+});
+suggestInput.addEventListener('keydown',e=>{
+  if(suggestPopup.hidden||!suggestChoices.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();markSuggestion(suggestActive+1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();markSuggestion(suggestActive<=0?suggestChoices.length-1:suggestActive-1);}
+  else if(e.key==='Escape'){e.preventDefault();hideSuggestions();}
+  else if(e.key==='Enter'&&suggestActive>=0){e.preventDefault();chooseSuggestion(suggestActive);}
+});
+suggestInput.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==suggestInput)hideSuggestions();},130));
+document.addEventListener('pointerdown',e=>{if(!suggestForm.contains(e.target)&&!suggestPopup.contains(e.target))hideSuggestions();});
+window.addEventListener('scroll',placeSuggestions,{passive:true});
+window.addEventListener('resize',placeSuggestions,{passive:true});
+if(window.visualViewport){window.visualViewport.addEventListener('resize',placeSuggestions);window.visualViewport.addEventListener('scroll',placeSuggestions);}
+
 $('#search-form').addEventListener('submit',e=>{
-  e.preventDefault(); const term=$('#search-input').value.trim(); if(term)search(term);
+  e.preventDefault(); cancelSuggestionRequest(); hideSuggestions(); const term=$('#search-input').value.trim(); if(term)search(term);
 });
 $('#result-filter').addEventListener('change',e=>{
   STORE.filter=e.target.value;
@@ -567,7 +733,7 @@ $('#nav-player').addEventListener('click',e=>{if(!STORE.current){e.preventDefaul
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;$('#install-btn').hidden=false;});
 $('#install-btn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('#install-btn').hidden=true;});
 window.addEventListener('appinstalled',()=>{$('#install-btn').hidden=true;toast('free-zik est installé !');});
-// PWA disponible depuis GitHub Pages en HTTPS, fonctionnement autonome sous /Free-zik/.
+// PWA disponible depuis GitHub Pages en HTTPS ; fonctionnement autonome sous /Free-zik/.
 $('#youtube-search-btn').addEventListener('click',()=>{
   const q=$('#search-input').value.trim();
   const link=parseYouTube(q);
