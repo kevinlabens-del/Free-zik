@@ -17,6 +17,7 @@
   <button class="navbtn active" id="home-btn" type="button">⌂ Accueil</button>
   <button class="navbtn" id="favorites-btn" type="button">★ Favoris</button>
   <button class="navbtn" id="recent-btn" type="button">↺ Historique</button>
+  <button class="navbtn" id="compat-btn" type="button">⚙ Compatibilité TV</button>
   <a class="navbtn mobile-link" href="./index.html?mobile=1">📱 Version mobile</a>
  </nav>
 </header>
@@ -24,7 +25,7 @@
  <section class="hero" id="home-panel">
   <div class="eyebrow"><span class="dot"></span> FREE-ZIK SUR TA SAMSUNG SMART TV</div>
   <h1>Ta musique.<br><em>En grand.</em></h1>
-  <p>Recherche un artiste, une chanson ou colle un lien vidéo. Utilise les flèches et le bouton OK de ta télécommande pour naviguer.</p>
+  <p>Interface adaptée à la Samsung Crystal UHD 58 pouces sous Tizen. Utilise les flèches, OK et Retour de la télécommande. La recherche et la lecture peuvent varier selon l'année du téléviseur.</p>
   <form id="search-form" class="searchbox" role="search">
    <span class="magnify" aria-hidden="true">⌕</span>
    <input id="query" type="search" placeholder="Titre, artiste, musique ou lien YouTube…" aria-label="Rechercher des vidéos et musiques" autocomplete="off" enterkeyhint="search">
@@ -54,6 +55,7 @@
     <h3 id="selected-title">Vidéo</h3>
     <p id="selected-author" class="muted"></p>
     <button id="play-again" class="primary player-btn" type="button">▶ Lire / relancer</button>
+    <button id="switch-player" class="secondary player-btn" type="button">↔ Essayer lecteur alternatif</button>
     <button id="favorite-video" class="secondary player-btn" type="button">☆ Ajouter aux favoris</button>
     <button id="loop-video" class="secondary player-btn" type="button">↻ Boucle désactivée</button>
     <button id="open-external" class="secondary player-btn" type="button">↗ Ouvrir dans YouTube</button>
@@ -61,6 +63,13 @@
     <p id="player-status" class="muted small">Pour démarrer, appuie sur « Lire / relancer » ou sur le lecteur.</p>
    </div>
   </div>
+ </section>
+ <section class="diagnostics" id="compat-panel" hidden>
+  <div class="list-header"><div><div class="eyebrow">VÉRIFIER MA SAMSUNG CRYSTAL UHD</div><h2>Compatibilité de ta TV</h2></div><button id="close-compat" type="button" class="secondary">✕ Fermer</button></div>
+  <p>Cette page affiche les capacités du navigateur. Prends une photo de cette section si la lecture ne fonctionne pas sur ta Samsung.</p>
+  <div id="compat-results" class="compat-results" aria-live="polite"></div>
+  <p class="muted small">Cette vérification n'établit pas à elle seule que YouTube autorise la lecture intégrée. Le code modèle exact de la TV permet de préciser l'année et le moteur Tizen.</p>
+  <a class="secondary" href="./index.html?mobile=1">📱 Ouvrir la version téléphone</a>
  </section>
  <div class="notice"><strong>À savoir :</strong> le lecteur TV utilise l'intégration YouTube officielle pour maximiser la compatibilité. Certaines vidéos sont indisponibles sur les sites tiers et des publicités peuvent apparaître. Le navigateur Samsung varie selon le modèle.</div>
 </main>

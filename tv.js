@@ -2,7 +2,7 @@
 'use strict';
 var $=function(s){return document.querySelector(s);};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
-var state={view:'home',current:null,results:[],history:[],favorites:[],loop:false,seq:0};
+var state={view:'home',current:null,results:[],history:[],favorites:[],loop:false,playerHost:'nocookie',seq:0};
 try{state.history=JSON.parse(localStorage.getItem('free-zik.tv.history')||'[]')||[];state.favorites=JSON.parse(localStorage.getItem('free-zik.tv.favorites')||'[]')||[];}catch(e){}
 function save(){try{localStorage.setItem('free-zik.tv.history',JSON.stringify(state.history));localStorage.setItem('free-zik.tv.favorites',JSON.stringify(state.favorites));}catch(e){}}
 function say(t){$('#player-status').textContent=t;}
@@ -62,7 +62,8 @@ function resolvePlaylist(list){
  }).catch(function(){$('#cards').innerHTML='<div class="empty">Impossible de lire cette playlist directement. Ouvre une vidéo de la playlist et colle son lien /watch?v=…</div>';});
 }
 function ytEmbed(item){
- var url='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(item.id);
+ var host=state.playerHost==='standard'?'www.youtube.com':'www.youtube-nocookie.com';
+ var url='https://'+host+'/embed/'+encodeURIComponent(item.id);
  var p=['autoplay=1','controls=1','rel=0','playsinline=1'];
  if(item.list)p.push('list='+encodeURIComponent(item.list));
  if(state.loop){p.push('loop=1');if(!item.list)p.push('playlist='+encodeURIComponent(item.id));}
@@ -78,6 +79,7 @@ function play(item){
  $('#selected-author').textContent=item.author||'';
  $('#favorite-video').textContent=state.favorites.some(function(x){return x.id===item.id;})?'★ Retirer des favoris':'☆ Ajouter aux favoris';
  $('#loop-video').textContent=state.loop?'↻ Boucle activée':'↻ Boucle désactivée';
+ $('#switch-player').textContent=state.playerHost==='standard'?'↔ Essayer confidentialité renforcée':'↔ Essayer lecteur alternatif';
  $('#video-frame').src=ytEmbed(item);
  say('Lecture intégrée YouTube : si elle ne démarre pas automatiquement, sélectionne ▶ dans le cadre.');
  $('#player-panel').scrollIntoView({behavior:'smooth',block:'start'});
@@ -98,9 +100,34 @@ function openTarget(url){window.open(url,'_blank','noopener,noreferrer');}
 $('#search-form').addEventListener('submit',function(e){e.preventDefault();beginSearch($('#query').value);});
 $$('[data-search]').forEach(function(b){b.addEventListener('click',function(){beginSearch(b.getAttribute('data-search'));});});
 $('#home-btn').addEventListener('click',function(){selectNav('home-btn');$('#home-panel').scrollIntoView({behavior:'smooth'});$('#query').focus();});
+function inspectTV(){
+ var ua=navigator.userAgent||'',m=ua.match(/Tizen[\s\/;]*([0-9.]+)/i),model=ua.match(/(?:SMART-TV[^;)]*|SAMSUNG[^;)]*|TV Safari[^;)]*)/i);
+ var video=document.createElement('video');
+ var h264=video.canPlayType?video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'):'';
+ var box=$('#compat-results');box.innerHTML='';
+ [
+  ['Appareil',/Tizen|SMART-TV|SmartTV/i.test(ua)?'Samsung TV / Tizen détecté':'Navigateur non identifié comme Samsung Tizen'],
+  ['Version Tizen (déclarée)',m?m[1]:'Non précisée par le navigateur'],
+  ['Navigateur',ua.slice(0,280)],
+  ['Vidéo MP4 / H.264 + AAC',h264||'Support non annoncé'],
+  ['Lecture YouTube intégrée','À tester : dépend de la TV, de la vidéo et des règles YouTube'],
+  ['Connexion',navigator.onLine?'Navigateur en ligne':'Hors ligne / connexion à vérifier']
+ ].forEach(function(pair){var el=document.createElement('div');el.className='compat-line';var k=document.createElement('strong');k.textContent=pair[0];var v=document.createElement('span');v.textContent=pair[1];el.appendChild(k);el.appendChild(v);box.appendChild(el);});
+ $('#compat-panel').hidden=false;
+ $('#compat-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('#compat-btn').addEventListener('click',function(){inspectTV();selectNav('compat-btn');});
+$('#close-compat').addEventListener('click',function(){$('#compat-panel').hidden=true;$('#home-btn').focus();});
 $('#favorites-btn').addEventListener('click',favorites);$('#recent-btn').addEventListener('click',history);
 $('#close-player').addEventListener('click',closePlayer);
 $('#play-again').addEventListener('click',function(){if(state.current){$('#video-frame').src=ytEmbed(state.current);say('La lecture a été relancée.');}});
+$('#switch-player').addEventListener('click',function(){
+ if(!state.current)return;
+ state.playerHost=state.playerHost==='nocookie'?'standard':'nocookie';
+ $('#switch-player').textContent=state.playerHost==='standard'?'↔ Essayer confidentialité renforcée':'↔ Essayer lecteur alternatif';
+ $('#video-frame').src=ytEmbed(state.current);
+ say('Lecteur '+(state.playerHost==='standard'?'YouTube standard':'confidentialité renforcée')+' chargé. Si la vidéo reste bloquée, utilise le bouton « Ouvrir dans YouTube ».');
+});
 $('#favorite-video').addEventListener('click',function(){
  if(!state.current)return;
  var exists=state.favorites.some(function(x){return x.id===state.current.id;});
@@ -133,6 +160,7 @@ document.addEventListener('keydown',function(e){
  var key=e.key||'',code=e.keyCode||0;
  if(key==='Escape'||key==='Backspace'&&document.activeElement!==$('#query')||code===10009){
   if(!$('#player-panel').hidden){e.preventDefault();closePlayer();return;}
+  if(!$('#compat-panel').hidden){e.preventDefault();$('#compat-panel').hidden=true;$('#compat-btn').focus();return;}
   if(!$('#suggestions').hidden){$('#suggestions').hidden=true;e.preventDefault();return;}
   return;
  }
