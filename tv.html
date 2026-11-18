@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0e0c17">
+<meta name="description" content="free-zik pour Samsung Smart TV : musique et vidéos, navigation à la télécommande">
+<title>free-zik TV — Musique en grand</title>
+<link rel="icon" href="./icon-192.png">
+<link rel="stylesheet" href="./tv.css">
+</head>
+<body>
+<div class="tv-shell">
+<header class="topbar">
+ <a href="./tv.html" class="brand" aria-label="Accueil free-zik TV">♫ <strong>free<span>-zik</span></strong><small>TV</small></a>
+ <nav class="toplinks" aria-label="Navigation principale">
+  <button class="navbtn active" id="home-btn" type="button">⌂ Accueil</button>
+  <button class="navbtn" id="favorites-btn" type="button">★ Favoris</button>
+  <button class="navbtn" id="recent-btn" type="button">↺ Historique</button>
+  <a class="navbtn mobile-link" href="./index.html?mobile=1">📱 Version mobile</a>
+ </nav>
+</header>
+<main>
+ <section class="hero" id="home-panel">
+  <div class="eyebrow"><span class="dot"></span> FREE-ZIK SUR TA SAMSUNG SMART TV</div>
+  <h1>Ta musique.<br><em>En grand.</em></h1>
+  <p>Recherche un artiste, une chanson ou colle un lien vidéo. Utilise les flèches et le bouton OK de ta télécommande pour naviguer.</p>
+  <form id="search-form" class="searchbox" role="search">
+   <span class="magnify" aria-hidden="true">⌕</span>
+   <input id="query" type="search" placeholder="Titre, artiste, musique ou lien YouTube…" aria-label="Rechercher des vidéos et musiques" autocomplete="off" enterkeyhint="search">
+   <button class="primary" type="submit" id="search-btn">Rechercher <span aria-hidden="true">↗</span></button>
+  </form>
+  <div class="suggestions" id="suggestions" hidden></div>
+  <div class="chips" aria-label="Recherches proposées">
+   <button type="button" data-search="Mano Solo" class="chip">🎙️ Mano Solo</button>
+   <button type="button" data-search="Rap français" class="chip">🎧 Rap français</button>
+   <button type="button" data-search="Reggae musique" class="chip">🌴 Reggae</button>
+   <button type="button" data-search="Jazz" class="chip">🎷 Jazz</button>
+   <button type="button" data-search="Pop musique" class="chip">✨ Pop</button>
+  </div>
+ </section>
+ <section id="results-section" class="list-area" aria-labelledby="list-title">
+  <div class="list-header"><div><div class="eyebrow">À DÉCOUVRIR</div><h2 id="list-title">Commence ta recherche</h2></div><span id="result-count"></span></div>
+  <div class="cards" id="cards" aria-live="polite">
+    <div class="empty">Choisis un style musical, recherche un titre ou colle une URL de vidéo.</div>
+  </div>
+ </section>
+ <section class="player-panel" id="player-panel" hidden aria-labelledby="player-title">
+  <div class="list-header"><div><div class="eyebrow">LECTEUR TV</div><h2 id="player-title">Lecture</h2></div><button type="button" id="close-player" class="secondary">✕ Fermer le lecteur</button></div>
+  <div class="video-layout">
+   <div class="video-box"><iframe id="video-frame" title="Lecteur vidéo free-zik TV" src="about:blank" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe></div>
+   <div class="video-aside">
+    <div class="eyebrow">TA SÉLECTION</div>
+    <h3 id="selected-title">Vidéo</h3>
+    <p id="selected-author" class="muted"></p>
+    <button id="play-again" class="primary player-btn" type="button">▶ Lire / relancer</button>
+    <button id="favorite-video" class="secondary player-btn" type="button">☆ Ajouter aux favoris</button>
+    <button id="loop-video" class="secondary player-btn" type="button">↻ Boucle désactivée</button>
+    <button id="open-external" class="secondary player-btn" type="button">↗ Ouvrir dans YouTube</button>
+    <button id="open-youtube-hyphen" class="secondary player-btn" type="button">↗ Essayer yout-ube.com</button>
+    <p id="player-status" class="muted small">Pour démarrer, appuie sur « Lire / relancer » ou sur le lecteur.</p>
+   </div>
+  </div>
+ </section>
+ <div class="notice"><strong>À savoir :</strong> le lecteur TV utilise l'intégration YouTube officielle pour maximiser la compatibilité. Certaines vidéos sont indisponibles sur les sites tiers et des publicités peuvent apparaître. Le navigateur Samsung varie selon le modèle.</div>
+</main>
+<footer><span>♫ free-zik TV</span><span>◀ ▶ ▲ ▼ Naviguer · OK Sélectionner · Retour Fermer</span><a href="./index.html?mobile=1">Mode téléphone</a></footer>
+</div>
+<script src="./tv.js" defer></script>
+</body>
+</html>

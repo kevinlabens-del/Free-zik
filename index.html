@@ -70,6 +70,7 @@
       </a>
       <div class="top-actions">
         <span class="desktop-only tiny-status"><span class="status-dot"></span> Recherche &amp; lecture</span>
+        <a class="cast-top" style="text-decoration:none" href="./tv.html" title="Mode Samsung Smart TV">📺 <span class="cast-text">Mode TV</span></a>
         <button id="cast-top-btn" type="button" class="cast-top" title="Caster sur une télévision" aria-label="Options pour caster sur la télévision">📺 <span class="cast-text">Caster</span></button>
         <button class="icon-btn" id="install-btn" type="button" hidden title="Installer l'application" aria-label="Installer l'application">↓</button>
         <button class="icon-btn" id="settings-btn" type="button" title="Réglages" aria-label="Réglages">⚙</button>
@@ -877,6 +878,11 @@ renderLibrary();applyShareTarget();
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
+}
+</script>
+<script>
+if (/Tizen|SMART-TV|SmartTV/i.test(navigator.userAgent || '') && !new URLSearchParams(location.search).has('mobile')) {
+  location.replace('./tv.html');
 }
 </script>
 </body>
