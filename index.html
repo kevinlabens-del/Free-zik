@@ -128,7 +128,7 @@
           <label class="player-loop-label"><input type="checkbox" id="player-loop" checked /> 🔁 Lecture en boucle</label>
           <button type="button" id="player-fullscreen" class="outline-btn small">⛶ Plein écran</button>
         </div>
-        <p id="player-note" class="player-note">Mode direct : lien yout-ube.com (avec le tiret). Si le site bloque son affichage ici, utilise le bouton « Ouvrir le lien yout-ube ».</p>
+        <p id="player-note" class="player-note">Mode yout-ube : les playlists nécessitent l’identifiant d’une vidéo. free-zik essaiera de récupérer la première vidéo avant de charger le lecteur.</p>
         <div class="player-actions">
           <button id="open-converted" type="button" class="outline-btn">Ouvrir le lien yout-ube ↗</button>
           <button id="copy-converted" type="button" class="outline-btn">Copier le lien</button>
@@ -531,6 +531,7 @@ function renderLibrary(){
   });
 }
 async function copyCurrent(){
+  if(STORE.current?.list&&!STORE.current.id){toast('Choisis une vidéo de cette playlist avant de copier son lien yout-ube.');return;}
   const text=convertedUrl(STORE.current);if(!text)return;
   try {await navigator.clipboard.writeText(text);toast('Lien yout-ube copié !');}
   catch {const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();const ok=document.execCommand('copy');ta.remove();toast(ok?'Lien copié !':'Copie impossible depuis ce navigateur.');}
@@ -738,7 +739,14 @@ $('#player-fullscreen').addEventListener('click',async()=>{
   } catch {toast('Utilise le bouton plein écran du lecteur YouTube.');}
 });
 $$('.player-tab').forEach(el=>el.addEventListener('click',()=>setPlayerMode(el.dataset.mode)));
-$('#open-converted').addEventListener('click',()=>external(convertedUrl(STORE.current)));
+$('#open-converted').addEventListener('click',()=>{
+  if(STORE.current?.list&&!STORE.current.id){
+    toast('Il faut d’abord choisir une vidéo de cette playlist.');
+    external(originalUrl(STORE.current));
+    return;
+  }
+  external(convertedUrl(STORE.current));
+});
 $('#open-original').addEventListener('click',()=>external(originalUrl(STORE.current)));
 $('#copy-converted').addEventListener('click',copyCurrent);
 // Casting YouTube requires YouTube's own sender. Never send YouTube page URLs
