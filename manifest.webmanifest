@@ -1,0 +1,36 @@
+{
+  "id": "./",
+  "name": "free-zik — Musique, vidéos et Cast",
+  "short_name": "free-zik",
+  "description": "Recherche et lecture de vidéos et playlists YouTube, favoris et accès TV via Cast.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101016",
+  "theme_color": "#101016",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
