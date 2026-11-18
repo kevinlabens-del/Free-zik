@@ -26,7 +26,7 @@ async function navigate(page,target){
 (async()=>{
  await apiTest('Recherche API retourne des vidéos (/api/search?q=stromae)','/api/search?q=stromae',j=>assert.ok(Array.isArray(j.items)&&j.items.some(x=>x.id&&x.title),'No usable YouTube video results'));
  await apiTest('Suggestions API (/api/suggest?q=str)','/api/suggest?q=str',j=>assert.ok(Array.isArray(j.items)&&j.items.length,'No autocomplete suggestions'));
- const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ const browser=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
  try{
   await run('Version mobile ouvre son interface',async()=>{
    const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,deviceScaleFactor:1,hasTouch:true});
