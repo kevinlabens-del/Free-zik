@@ -54,8 +54,8 @@ function videoItems(data){
  if(!out.length)throw Error('No videoRenderer entries found');
  return out;
 }
-async function youtubeSearch(q){
- const url=new URL('https://www.youtube.com/results');
+async function youtubeSearch(q,host='www.youtube.com'){
+ const url=new URL('https://'+host+'/results');
  url.searchParams.set('search_query',q);url.searchParams.set('hl','fr');url.searchParams.set('gl','FR');
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9500);
  try{
@@ -96,14 +96,14 @@ async function attempt(kind,base,q){
 }
 module.exports=async(req,res)=>{
  res.setHeader('Access-Control-Allow-Origin','*');
- res.setHeader('Cache-Control','public, s-maxage=90, stale-while-revalidate=300');
+ res.setHeader('Cache-Control','public, s-maxage=1800, stale-while-revalidate=86400');
  if(req.method!=='GET'){res.status(405).json({items:[]});return;}
  let q=Array.isArray(req.query?.q)?req.query.q[0]:req.query?.q;
  if(typeof q!=='string'||q.trim().length<1||q.length>95){res.status(400).json({items:[]});return;}
  q=q.trim();const key=q.toLowerCase();
  if(cache.has(key)&&Date.now()-cache.get(key).at<120000){res.status(200).json({items:cache.get(key).items});return;}
  try{
-  const items=await Promise.any([youtubeSearch(q),...targets.map(([kind,host])=>attempt(kind,host,q))]);
+  const items=await Promise.any([youtubeSearch(q),new Promise(resolve=>setTimeout(resolve,600)).then(()=>youtubeSearch(q,'m.youtube.com')),...targets.map(([kind,host])=>attempt(kind,host,q))]);
   cache.set(key,{at:Date.now(),items});if(cache.size>60)cache.delete(cache.keys().next().value);
   res.status(200).json({items});
  }catch{res.status(503).json({items:[],message:'Le service public de recherche est temporairement indisponible.'});}

@@ -38,7 +38,8 @@ function beginSearch(q){
   var box=$('#cards');box.innerHTML='';
   var notice=document.createElement('div');notice.className='empty';notice.textContent='La recherche YouTube n’a pas répondu. Essaie un lien vidéo direct ou consulte les résultats dans YouTube.';
   var btn=document.createElement('button');btn.type='button';btn.className='primary';btn.textContent='↗ Chercher « '+q+' » sur YouTube';btn.addEventListener('click',function(){openTarget('https://www.youtube.com/results?search_query='+encodeURIComponent(q));});
-  box.appendChild(notice);box.appendChild(btn);
+  var retry=document.createElement('button');retry.type='button';retry.className='secondary';retry.textContent='↻ Réessayer la recherche';retry.addEventListener('click',function(){beginSearch(q);});
+  box.appendChild(notice);box.appendChild(retry);box.appendChild(btn);
  });
  $('#results-section').scrollIntoView({behavior:'smooth',block:'start'});
 }
