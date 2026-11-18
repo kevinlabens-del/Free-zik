@@ -76,7 +76,7 @@
         <div class="hero-copy">
           <div class="eyebrow"><span class="spark"></span> TON YOUTUBE, À TA FAÇON</div>
           <h1>Une recherche.<br><span>Ton lecteur.</span></h1>
-          <p>Trouve ta musique et regarde les vidéos <strong>directement dans free-zik</strong>, avec le mode de lecture de yout-ube et un lien partageable.</p>
+          <p>Recherche ta musique et charge directement son lien <strong>yout-ube.com</strong> dans free-zik, avec une option d’ouverture externe si le site refuse l’intégration.</p>
           <form id="search-form" class="search-panel">
             <label class="sr-only" for="search-input">Rechercher une vidéo, une playlist ou coller un lien</label>
             <span class="search-icon" aria-hidden="true">⌕</span>
@@ -107,17 +107,17 @@
       <section class="player-section" id="lecteur" hidden>
         <div class="section-head"><div><span class="section-kicker">LECTEUR</span><h2 id="now-title">Ta vidéo</h2></div><button id="favorite-btn" class="outline-btn small" type="button">☆ Favori</button></div>
         <div class="player-tabs" role="tablist" aria-label="Mode du lecteur">
-          <button class="player-tab active" type="button" data-mode="converted" aria-selected="true">▶ Lecture intégrée</button>
-          <button class="player-tab" type="button" data-mode="official" aria-selected="false">Lecteur alternatif</button>
+          <button class="player-tab active" type="button" data-mode="converted" aria-selected="true">▶ yout-ube.com</button>
+          <button class="player-tab" type="button" data-mode="official" aria-selected="false">Secours YouTube</button>
         </div>
         <div class="player-frame-wrap"><iframe id="video-frame" title="Lecteur vidéo ou playlist" src="about:blank" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
         <div class="player-inline-controls" aria-label="Commandes du lecteur">
-          <button type="button" id="player-play" class="primary-btn">▶ Lire maintenant</button>
-          <button type="button" id="player-restart" class="outline-btn small">↻ Relancer dans free-zik</button>
+          <button type="button" id="player-play" class="primary-btn">▶ Charger yout-ube</button>
+          <button type="button" id="player-restart" class="outline-btn small">↻ Recharger le lien</button>
           <label class="player-loop-label"><input type="checkbox" id="player-loop" checked /> 🔁 Lecture en boucle</label>
           <button type="button" id="player-fullscreen" class="outline-btn small">⛶ Plein écran</button>
         </div>
-        <p id="player-note" class="player-note">Si le cadre reste vide, touche « ▶ Lire maintenant ». Si la vidéo refuse l'intégration, utilise « Lecteur alternatif » ou « Ouvrir YouTube ».</p>
+        <p id="player-note" class="player-note">Mode direct : lien yout-ube.com (avec le tiret). Si le site bloque son affichage ici, utilise le bouton « Ouvrir le lien yout-ube ».</p>
         <div class="player-actions">
           <button id="open-converted" type="button" class="outline-btn">Ouvrir le lien yout-ube ↗</button>
           <button id="copy-converted" type="button" class="outline-btn">Copier le lien</button>
@@ -421,10 +421,13 @@ function setPlayerMode(mode) {
   if(!STORE.current)return;
   STORE.mode=mode==='official'?'official':'converted';
   $$('.player-tab').forEach(el=>{const chosen=el.dataset.mode===STORE.mode;el.classList.toggle('active',chosen);el.setAttribute('aria-selected',String(chosen));});
-  $('#video-frame').src=embedUrl(STORE.current,STORE.mode,STORE.loop) || 'about:blank';
+  // Respect the selected domain: the primary iframe loads the exact yout-ube URL.
+  // The external service may redirect; no third-party iframe restrictions are bypassed.
+  const source=STORE.mode==='converted' ? convertedUrl(STORE.current) : embedUrl(STORE.current,'official',STORE.loop);
+  $('#video-frame').src=source || 'about:blank';
   putText($('#player-note'),STORE.mode==='converted'
-    ?'Lecteur vidéo dans free-zik. Si tu ne vois pas les commandes, touche « ▶ Lire maintenant ». Certaines vidéos interdisent l’intégration, même dans le lecteur YouTube officiel.'
-    :'Lecteur YouTube standard, toujours dans free-zik. Certaines vidéos peuvent refuser l’intégration.');
+    ?'Adresse chargée : '+source+' — yout-ube.com redirige lui-même vers son lecteur. Si le cadre reste vide, ouvre le lien yout-ube dans le navigateur.'
+    :'Lecteur YouTube de secours, uniquement si tu le choisis. Certaines vidéos peuvent refuser l’intégration.');
 }
 function play(item) {
   if(!item?.id && !item?.list) return;
