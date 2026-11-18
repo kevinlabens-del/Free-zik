@@ -156,5 +156,6 @@ document.addEventListener('keydown',function(e){
  if(best){best.focus();best.scrollIntoView({block:'nearest',inline:'nearest'});e.preventDefault();}
 });
 if(/Tizen|SMART-TV|SmartTV/i.test(navigator.userAgent||''))document.body.classList.add('tizen-browser');
-$('#query').focus();
+// Do not open the Samsung on-screen keyboard on page load. Focus the remote-friendly home control.
+$('#home-btn').focus();
 })();
