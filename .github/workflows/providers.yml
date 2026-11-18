@@ -1,0 +1,21 @@
+name: free-zik — audit fournisseurs de recherche
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/providers.yml'
+      - 'tests/providers.mjs'
+permissions:
+  contents: read
+jobs:
+  providers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Vérifier les sources de recherche en direct
+        run: node tests/providers.mjs
