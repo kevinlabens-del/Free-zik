@@ -507,7 +507,7 @@ async function resolveAndPlayPlaylist() {
 function setPlayerMode(mode) {
   if(!STORE.current)return;
   STORE.mode=mode==='official'?'official':'converted';
-  $('.player-tab').forEach(el=>{const chosen=el.dataset.mode===STORE.mode;el.classList.toggle('active',chosen);el.setAttribute('aria-selected',String(chosen));});
+  $$('.player-tab').forEach(el=>{const chosen=el.dataset.mode===STORE.mode;el.classList.toggle('active',chosen);el.setAttribute('aria-selected',String(chosen));});
   if(STORE.mode==='converted'&&!STORE.current.id){
     $('#video-frame').src='about:blank';
     resolveAndPlayPlaylist();
